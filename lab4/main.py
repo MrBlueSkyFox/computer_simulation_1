@@ -1,6 +1,7 @@
 from math import cos, sin, pi
 from lab4.Sample import Sample
-from lab4.functions import prepare_etalon, np
+from lab4.functions import np, prepare_etalon, etalon, control_element, clean_etalon, FRis_function
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -18,7 +19,69 @@ def main():
     S2 = np.concatenate((sample.Mx2 + sample.SigX2 * np.random.randn(sample.n2, 1),
                          sample.My2 + sample.SigY2 * np.random.randn(sample.n2, 1)),
                         axis=1)
-    prepare_etalon(S1, S2, sample.n1, sample.n2)
+    u1 = prepare_etalon(S1, S2, sample.n1, sample.n2)
+    u2 = prepare_etalon(S2, S1, sample.n2, sample.n1)
+    # Находим эталоны
+    x01, y01, l1 = etalon(u1)
+    x02, y02, l2 = etalon(u2)
+    # Генерация контрольных элементов
+    c_x1 = control_element(sample.Mx1, sample.SigX1, z)
+    c_y1 = control_element(sample.My1, sample.SigY1, z)
+    c_x2 = control_element(sample.Mx2, sample.SigX2, z)
+    c_y2 = control_element(sample.My2, sample.SigY2, z)
+
+    plt.xlim(-2.5, 2.5)
+    plt.ylim(-2.5, 2.5)
+    # plt.plot(S1[:, 0], S1[:, 1], color='red', marker='o')
+    plt.plot(S1[:, 0], S1[:, 1], 'ro')
+    plt.plot(S2[:, 0], S2[:, 1], color='black', marker='o', linestyle='None')
+    # Эталоны
+    for i in range(0, l1.shape[0]):
+        plt.plot(x01[i], y01[i], color='green', marker='*', linestyle='None')
+    for i in range(0, l2.shape[0]):
+        plt.plot(x02[i], y02[i], color='blue', marker='*', linestyle='None')
+    # Очистка эталоново
+    x01, y01, l1 = clean_etalon(x01, y01, l1)
+    x02, y02, l2 = clean_etalon(x02, y02, l2)
+    # print(np.array_equal(x01, _x01))
+    # print(np.array_equal(x02, _x02))
+    # print(np.array_equal(y02, _y02))
+    # print(np.array_equal(y01, _y01))
+    # print(np.array_equal(l1, _l1))
+    # print(np.array_equal(l2, _l2))
+
+    control_for_1 = []
+    control_for_2 = []
+    for i in range(0, z):
+        control_for_1 = np.append(control_for_1,
+                                  FRis_function(x01, y01, x02, y02, c_x1[i], c_y1[i], sample.disp1, sample.disp2))
+        control_for_2 = np.append(control_for_2,
+                                  FRis_function(x02, y02, x01, y01, c_x2[i], c_y2[i], sample.disp1, sample.disp2))
+    plt.figure()
+    plt.title('Fig 2')
+    plt.xlim(-2.5, 2.5)
+    plt.ylim(-2.5, 2.5)
+    s1 = [8 * 4 for n in range(0, c_x1.shape[0])]
+    s2 = [8 * 4 for n in range(0, c_x1.shape[0])]
+    # plt.scatter(c_x1, c_y1, s=s1, c='k', marker='o')
+    # plt.scatter(c_x2, c_y2, s=s2, c='r', marker='o')
+    plt.plot(c_x1, c_y1, color='black', marker='o', linestyle='None', markersize=6)
+    plt.plot(c_x2, c_y2, color='red', marker='o', linestyle='None', markersize=6)
+
+    for i in range(0, l1.shape[0]):
+        plt.scatter(x01[i], y01[i], s=l1[i] * 3, c='g', marker='*')
+    for i in range(0, l2.shape[0]):
+        plt.scatter(x02[i], y02[i], s=l2[i] * 3, c='b', marker='*')
+
+
+    plt.show()
+
+    # print('x01\n', x01)
+    # print('yo1\n', y01)
+    # print('l1\n', l1)
+    # print('x02\n', x02)
+    # print('yo1\n', y02)
+    # print('l1\n', l2)
 
 
 def lab4_main(var=1):
