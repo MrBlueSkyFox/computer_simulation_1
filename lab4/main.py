@@ -1,18 +1,19 @@
 from math import cos, sin, pi
 from lab4.Sample import Sample
-from lab4.functions import np, prepare_etalon, etalon, control_element, clean_etalon, FRis_function
+from lab4.functions import np, prepare_etalon, etalon, control_element, clean_etalon, FRis_function, is_member
 import matplotlib.pyplot as plt
 
 
 def main():
     sample = Sample()
     sample.print_data()
-    A = (sample.Mx1 + sample.Mx2) / 2 - 0.3  # Начало промежутка для генерации критических значений по оси X
-    B = (sample.Mx1 + sample.Mx2) / 2 + 0.3  # Конец  промежутка для генерации критических значений по оси X
-    C = (sample.My1 + sample.My2) / 2 - 0.3  # Начало промежутка для генерации критических значений по оси Y
-    D = (sample.My1 + sample.My2) / 2 + 0.3  # Конец  промежутка для генерации критических значений по оси Y
+    # Не оособо работает
+    # A = (sample.Mx1 + sample.Mx2) / 2 - 0.3  # Начало промежутка для генерации критических значений по оси X
+    # B = (sample.Mx1 + sample.Mx2) / 2 + 0.3  # Конец  промежутка для генерации критических значений по оси X
+    # C = (sample.My1 + sample.My2) / 2 - 0.3  # Начало промежутка для генерации критических значений по оси Y
+    # D = (sample.My1 + sample.My2) / 2 + 0.3  # Конец  промежутка для генерации критических значений по оси Y
     z = 50  # кол-во крит. знач на итерацию
-    # np.random.seed(1)
+    # np.random.seed(2)
     S1 = np.concatenate((sample.Mx1 + sample.SigX1 * np.random.randn(sample.n1, 1),
                          sample.My1 + sample.SigY1 * np.random.randn(sample.n1, 1)),
                         axis=1)
@@ -33,22 +34,18 @@ def main():
     plt.xlim(-2.5, 2.5)
     plt.ylim(-2.5, 2.5)
     # plt.plot(S1[:, 0], S1[:, 1], color='red', marker='o')
-    plt.plot(S1[:, 0], S1[:, 1], 'ro')
-    plt.plot(S2[:, 0], S2[:, 1], color='black', marker='o', linestyle='None')
+    # plt.plot(S1[:, 0], S1[:, 1], 'ro', markerfacecolor='none')
     # Эталоны
+    plt.plot(S1[:, 0], S1[:, 1], color='black', marker='o', linestyle='None', markerfacecolor='none', markersize=6)
+    plt.plot(S2[:, 0], S2[:, 1], color='red', marker='o', linestyle='None', markerfacecolor='none', markersize=6)
+
     for i in range(0, l1.shape[0]):
-        plt.plot(x01[i], y01[i], color='green', marker='*', linestyle='None')
+        plt.scatter(x01[i], y01[i], s=l1[i] * 20, c='g', marker='*')
     for i in range(0, l2.shape[0]):
-        plt.plot(x02[i], y02[i], color='blue', marker='*', linestyle='None')
-    # Очистка эталоново
+        plt.scatter(x02[i], y02[i], s=l2[i] * 20, c='b', marker='*')
+
     x01, y01, l1 = clean_etalon(x01, y01, l1)
     x02, y02, l2 = clean_etalon(x02, y02, l2)
-    # print(np.array_equal(x01, _x01))
-    # print(np.array_equal(x02, _x02))
-    # print(np.array_equal(y02, _y02))
-    # print(np.array_equal(y01, _y01))
-    # print(np.array_equal(l1, _l1))
-    # print(np.array_equal(l2, _l2))
 
     control_for_1 = []
     control_for_2 = []
@@ -57,31 +54,51 @@ def main():
                                   FRis_function(x01, y01, x02, y02, c_x1[i], c_y1[i], sample.disp1, sample.disp2))
         control_for_2 = np.append(control_for_2,
                                   FRis_function(x02, y02, x01, y01, c_x2[i], c_y2[i], sample.disp1, sample.disp2))
+
+    rez_o1 = sum(is_member(control_for_1, 2))
+    rez_o2 = sum(is_member(control_for_2, 2))
+
+    rez_n1 = sum(is_member(control_for_1, 0))
+    rez_n2 = sum(is_member(control_for_2, 0))
     plt.figure()
     plt.title('Fig 2')
     plt.xlim(-2.5, 2.5)
     plt.ylim(-2.5, 2.5)
-    s1 = [8 * 4 for n in range(0, c_x1.shape[0])]
-    s2 = [8 * 4 for n in range(0, c_x1.shape[0])]
-    # plt.scatter(c_x1, c_y1, s=s1, c='k', marker='o')
-    # plt.scatter(c_x2, c_y2, s=s2, c='r', marker='o')
-    plt.plot(c_x1, c_y1, color='black', marker='o', linestyle='None', markersize=6)
-    plt.plot(c_x2, c_y2, color='red', marker='o', linestyle='None', markersize=6)
+
+    plt.plot(c_x1, c_y1, color='black', marker='o', linestyle='None', markersize=6, markerfacecolor='none')
+    plt.plot(c_x2, c_y2, color='red', marker='o', linestyle='None', markersize=6, markerfacecolor='none')
 
     for i in range(0, l1.shape[0]):
-        plt.scatter(x01[i], y01[i], s=l1[i] * 3, c='g', marker='*')
+        plt.scatter(x01[i], y01[i], s=l1[i] * 20, c='g', marker='*')
     for i in range(0, l2.shape[0]):
-        plt.scatter(x02[i], y02[i], s=l2[i] * 3, c='b', marker='*')
+        plt.scatter(x02[i], y02[i], s=l2[i] * 20, c='b', marker='*')
 
+    # plt.show()
+    # Добавление отображение ошибок  на график
+    # Объект 1-го класса отнесен ко 2-му классу
+
+    # Добавление отображение ошибок  на график
+    # Объект 2-го класса отнесен ко 1-му классу
+
+    for i in range(0, control_for_1.shape[0]):
+        if control_for_1[i] == 2:
+            plt.scatter(c_x1[i], c_y1[i], s=10, c='m', marker='x')
+    for i in range(0, control_for_2.shape[0]):
+        if control_for_2[i] == 1:
+            plt.scatter(c_x1[i], c_y1[i], s=10, c='y', marker='x')
+    print('Ошибки:\n' + 'Объект 1-го класса отнесен ко 2-му : ' + str(rez_o1) + '\n' +
+          'Объект 2-го класса отнесен ко 1-му : ' + str(rez_o2) + '\n' +
+          'Колличество отказов от распознования : ' + str(rez_n1 + rez_n2))
 
     plt.show()
 
-    # print('x01\n', x01)
-    # print('yo1\n', y01)
-    # print('l1\n', l1)
-    # print('x02\n', x02)
-    # print('yo1\n', y02)
-    # print('l1\n', l2)
+
+# print('x01\n', x01)
+# print('yo1\n', y01)
+# print('l1\n', l1)
+# print('x02\n', x02)
+# print('yo1\n', y02)
+# print('l1\n', l2)
 
 
 def lab4_main(var=1):
